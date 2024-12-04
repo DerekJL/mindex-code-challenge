@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -46,44 +45,48 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
 	public ReportingStructure readReportingStructure(String id) {
-    	LOG.debug("Reading employee with id [{}]", id);
+    	LOG.debug("Reading employee with id [{}] for reporting-structure", id);
     	Employee employee = employeeRepository.findByEmployeeId(id);
-    	 
-        //query to fully populate the employee objects in the directReports list, as the database only has employeeId for them
-        List<Employee> updatedDirectReports = new ArrayList<Employee>();
-    	for (int i = 0 ; i < employee.getDirectReports().size(); i++) {
-        	Employee directReport = employeeRepository.findByEmployeeId(employee.getDirectReports().get(i).getEmployeeId());
-        	updatedDirectReports.add(directReport);
-        }
-    	employee.setDirectReports(updatedDirectReports);
-    	
-    	//go through all the employee's direct reports to find the numberOfReports       
-    	int numberOfReports = getTotalDirectReports(employee);       
-        ReportingStructure reportingStructure = new ReportingStructure(employee, numberOfReports);
-             
+    	ReportingStructure reportingStructure = getTotalDirectReports(employee);                   
         return reportingStructure;
 	}
     
-    private int getTotalDirectReports(Employee employee) {
-        if (employee == null || employee.getDirectReports() == null) {
-            return 0;
-        }
-        
-        // Count direct and indirect reports
-        int reportsCount = 0;
-        for (Employee directReport : employee.getDirectReports()) {
-            reportsCount++;
-            
-            //query for data from indirect reports, as direct report data was already queried and will skip this if block
-            directReport = employeeRepository.findByEmployeeId(directReport.getEmployeeId());
-            
-
-            // Recursively count the direct and indirect reports of the current employee
-            int indirectReports = getTotalDirectReports(directReport);
-            reportsCount += indirectReports;
+    /*go through all the employee's direct and indirect reports to find the numberOfReports and 
+	 * also populate all the employee objects with data which are being returned in the response*/ 
+    private ReportingStructure getTotalDirectReports(Employee employee) {        
+    	if (employee == null || employee.getDirectReports() == null) {
+            return new ReportingStructure(employee, 0);
         }
 
-        return reportsCount;
+        List<Employee> employees = new ArrayList<>();
+        employees.add(employee); 
+
+    	int numberOfReports = 0;
+    	
+        while (!employees.isEmpty()) {
+            /* Process the first employee in the arraylist and add their direct reports to the arraylist for processing next.  
+             * Update their data to be used for the response payload as we're iterating through them to count the total numberOfReports.*/
+            Employee updatedEmployee = employees.remove(0); 
+            
+            if (updatedEmployee.getDirectReports() != null) {           	
+            	List<Employee> updatedDirectReports = new ArrayList<Employee>();
+            	
+                for (Employee directReport : updatedEmployee.getDirectReports()) {             	
+                	//Count this direct report
+                	numberOfReports++; 
+                    //pull data for this direct report 
+                	LOG.debug("Reading directReport with id [{}] for reporting-structure", directReport.getEmployeeId());
+                    directReport = employeeRepository.findByEmployeeId(directReport.getEmployeeId());
+                    //add the updated direct report object to a list to use for updating this direct report in the response payload employee object
+                    updatedDirectReports.add(directReport);
+                    //Add this data to the arraylist for processing
+                    employees.add(directReport);                 
+                }
+                //update this employees direct reports for the response employee object
+                updatedEmployee.setDirectReports(updatedDirectReports);               
+            }
+        }
+        return new ReportingStructure(employee, numberOfReports);
     }
     
     @Override
