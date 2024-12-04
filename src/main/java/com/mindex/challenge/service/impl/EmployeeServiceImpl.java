@@ -38,9 +38,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
 	public Compensation create(Compensation compensation) {
     	LOG.debug("Creating compensation [{}]", compensation);
-    	compensationRepository.insert(compensation);
-    	
-    	return compensation;
+
+    	return compensationRepository.insert(compensation);	  	 
 	}
     
     @Override

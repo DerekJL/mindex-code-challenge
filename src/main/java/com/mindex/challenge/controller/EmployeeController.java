@@ -32,7 +32,17 @@ public class EmployeeController {
     public Compensation create(@RequestBody Compensation compensation) {
     	LOG.debug("Received compensation create request for [{}]", compensation);
     	
-    	return employeeService.create(compensation);
+    	Compensation response = new Compensation();
+    	try {
+    		response = employeeService.create(compensation);
+    	}catch(IllegalArgumentException iae) {
+    		LOG.error("Invalid compensation create for compensation [{}] - ", compensation, iae);
+    		throw new RuntimeException("Invalid compensation"); 
+    	}catch(Exception e) {
+    		LOG.error("Error creating compensation [{}] - ", compensation, e);
+    		throw new RuntimeException("Error creating compensation"); 
+    	}
+    	return response;
     }
 
     @GetMapping("/employee/{id}")
