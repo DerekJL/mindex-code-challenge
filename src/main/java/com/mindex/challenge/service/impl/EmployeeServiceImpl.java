@@ -72,6 +72,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 	public ReportingStructure readReportingStructure(String id) {
     	LOG.debug("Reading employee with id [{}] for reporting-structure", id);
     	Employee employee = employeeRepository.findByEmployeeId(id);
+    	
+    	if (employee == null) {
+            throw new RuntimeException("Invalid employeeId: " + id);
+        }
+    	
     	ReportingStructure reportingStructure = getTotalDirectReports(employee);                   
         return reportingStructure;
 	}
@@ -79,9 +84,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     /*go through all the employee's direct and indirect reports to find the numberOfReports and 
 	 * also populate all the employee objects with data which are being returned in the response*/ 
     private ReportingStructure getTotalDirectReports(Employee employee) {        
-    	if (employee == null || employee.getDirectReports() == null) {
-            return new ReportingStructure(employee, 0);
-        }
 
         List<Employee> employees = new ArrayList<>();
         employees.add(employee); 
