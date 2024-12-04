@@ -12,6 +12,15 @@ public class Employee {
 
     public Employee() {
     }
+    
+    public Employee(Employee employee) {
+    	this.employeeId = employee.getEmployeeId();
+    	this.firstName = employee.getFirstName();
+    	this.lastName = employee.getLastName();
+    	this.position = employee.getPosition();
+    	this.department = employee.getDepartment();
+    	this.directReports = employee.getDirectReports();
+    }
 
     public String getEmployeeId() {
         return employeeId;
