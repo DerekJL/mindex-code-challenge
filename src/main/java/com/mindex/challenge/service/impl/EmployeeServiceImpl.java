@@ -1,6 +1,8 @@
 package com.mindex.challenge.service.impl;
 
+import com.mindex.challenge.dao.CompensationRepository;
 import com.mindex.challenge.dao.EmployeeRepository;
+import com.mindex.challenge.data.Compensation;
 import com.mindex.challenge.data.Employee;
 import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
@@ -20,6 +22,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private CompensationRepository compensationRepository;
+    	
     @Override
     public Employee create(Employee employee) {
         LOG.debug("Creating employee [{}]", employee);
@@ -31,9 +36,16 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+	public Compensation create(Compensation compensation) {
+    	LOG.debug("Creating compensation [{}]", compensation);
+    	compensationRepository.insert(compensation);
+    	
+    	return compensation;
+	}
+    
+    @Override
     public Employee read(String id) {
         LOG.debug("Reading employee with id [{}]", id);
-
         Employee employee = employeeRepository.findByEmployeeId(id);
 
         if (employee == null) {
@@ -43,6 +55,19 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employee;
     }
 
+
+	@Override
+	public Compensation readCompensation(String id) {
+		LOG.debug("Reading compensation with id [{}]", id);
+		Compensation compensation = compensationRepository.findByEmployeeId(id);
+
+		if (compensation == null) {
+            throw new RuntimeException("Invalid employeeId: " + id);
+        }
+		
+		return compensation;
+	}
+    
     @Override
 	public ReportingStructure readReportingStructure(String id) {
     	LOG.debug("Reading employee with id [{}] for reporting-structure", id);
@@ -95,5 +120,6 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return employeeRepository.save(employee);
     }
+
 
 }
