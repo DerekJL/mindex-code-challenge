@@ -36,11 +36,16 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-	public Compensation create(Compensation compensation) {
+	public Compensation createCompensation(Compensation compensation) {
     	LOG.debug("Creating compensation [{}]", compensation);
-    	compensationRepository.insert(compensation);
-    	
-    	return compensation;
+
+    	/*for now, check to see if an employee record exists for this employeeId before creating a 
+    	compensation for it (until requirements are more clear, if we allow duplicates, if we want to upsert instead, etc.)*/
+    	Compensation existingCompensation = compensationRepository.findByEmployeeId(compensation.getEmployeeId());
+    	if (existingCompensation != null) {
+    		return null;
+    	}   	
+    	return compensationRepository.insert(compensation);	   	  	 
 	}
     
     @Override
@@ -59,23 +64,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 	@Override
 	public Compensation readCompensation(String id) {
 		LOG.debug("Reading compensation with id [{}]", id);
-		Compensation compensation = compensationRepository.findByEmployeeId(id);
-
-		if (compensation == null) {
-            throw new RuntimeException("Invalid employeeId: " + id);
-        }
-		
-		return compensation;
+		return compensationRepository.findByEmployeeId(id);		
 	}
     
     @Override
 	public ReportingStructure readReportingStructure(String id) {
     	LOG.debug("Reading employee with id [{}] for reporting-structure", id);
     	Employee employee = employeeRepository.findByEmployeeId(id);
-    	
-    	if (employee == null) {
-            throw new RuntimeException("Invalid employeeId: " + id);
-        }
     	
     	ReportingStructure reportingStructure = getTotalDirectReports(employee);                   
         return reportingStructure;
@@ -85,6 +80,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 	 * also populate all the employee objects with data which are being returned in the response*/ 
     private ReportingStructure getTotalDirectReports(Employee employee) {        
 
+    	if (employee == null || employee.getDirectReports() == null) {
+            return new ReportingStructure(employee, 0);
+        }
+    	
         List<Employee> employees = new ArrayList<>();
         employees.add(employee); 
 

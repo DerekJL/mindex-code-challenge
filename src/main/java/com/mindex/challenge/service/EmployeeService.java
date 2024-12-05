@@ -6,7 +6,7 @@ import com.mindex.challenge.data.ReportingStructure;
 
 public interface EmployeeService {
     Employee create(Employee employee);
-    Compensation create (Compensation compensation);
+    Compensation createCompensation (Compensation compensation);
     Employee read(String id);
     Compensation readCompensation(String id);
     ReportingStructure readReportingStructure(String id);
