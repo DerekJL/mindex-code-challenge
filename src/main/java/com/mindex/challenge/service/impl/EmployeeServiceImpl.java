@@ -5,6 +5,7 @@ import com.mindex.challenge.dao.EmployeeRepository;
 import com.mindex.challenge.data.Compensation;
 import com.mindex.challenge.data.Employee;
 import com.mindex.challenge.data.ReportingStructure;
+import com.mindex.challenge.exception.CompensationAlreadyExistsException;
 import com.mindex.challenge.service.EmployeeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,19 +35,6 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return employee;
     }
-
-    @Override
-	public Compensation createCompensation(Compensation compensation) {
-    	LOG.debug("Creating compensation [{}]", compensation);
-
-    	/*for now, check to see if an employee record exists for this employeeId before creating a 
-    	compensation for it (until requirements are more clear, if we allow duplicates, if we want to upsert instead, etc.)*/
-    	Compensation existingCompensation = compensationRepository.findByEmployeeId(compensation.getEmployeeId());
-    	if (existingCompensation != null) {
-    		return null;
-    	}   	
-    	return compensationRepository.insert(compensation);	   	  	 
-	}
     
     @Override
     public Employee read(String id) {
@@ -60,13 +48,28 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employee;
     }
 
-
 	@Override
 	public Compensation readCompensation(String id) {
 		LOG.debug("Reading compensation with id [{}]", id);
 		return compensationRepository.findByEmployeeId(id);		
 	}
     
+	@Override
+	public Compensation createCompensation(Compensation compensation) throws CompensationAlreadyExistsException  {
+    	LOG.debug("Creating compensation [{}]", compensation);
+
+    	/*for now, check to see if an employee record exists for this employeeId before creating a 
+    	compensation for it (until requirements are more clear, if we allow duplicates, if we want to upsert instead, etc.)*/
+    	Compensation existingCompensation = compensationRepository.findByEmployeeId(compensation.getEmployeeId());
+    	if (existingCompensation != null) {
+    		//throw custom exception to tell controller that compensation already exists
+    		throw new CompensationAlreadyExistsException("Compensation already exists");
+    	}
+    	
+    	//insert the compensation to database
+    	return compensationRepository.insert(compensation);    	
+	}
+	
     @Override
 	public ReportingStructure readReportingStructure(String id) {
     	LOG.debug("Reading employee with id [{}] for reporting-structure", id);
